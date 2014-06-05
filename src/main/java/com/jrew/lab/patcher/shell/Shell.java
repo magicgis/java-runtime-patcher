@@ -22,40 +22,120 @@ public class Shell {
      *
      * @param args
      */
-    public static void main(String[] args) throws IOException, AttachNotSupportedException, AgentLoadException,
-            AgentInitializationException {
+    public static void main(String[] args) throws IOException {
 
-        System.out.println("Java runtime patcher utility");
-        System.out.println();
-        System.out.println("Please select JVM process to patch:");
+        Shell shell = new Shell();
+        shell.run();
+    }
+
+    /**
+     *
+     */
+    private void run() {
+
+        ShellEcho.printGreetingsMessage();
+        processJVMSelection();
+
+    }
+
+    /**
+     *
+     */
+    private void processJVMSelection() {
+
+        ShellEcho.printJVMSelectionMessage();
 
         List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
+        printJVMs(virtualMachineDescriptors);
+
+        runJVMSelectionLoop(virtualMachineDescriptors);
+    }
+
+    /**
+     *
+     * @param virtualMachineDescriptors
+     */
+    private void printJVMs(List<VirtualMachineDescriptor> virtualMachineDescriptors) {
         for (int i = 0; i < virtualMachineDescriptors.size(); i++) {
-
             VirtualMachineDescriptor virtualMachineDescriptor =  virtualMachineDescriptors.get(i);
-            System.out.println();
-            System.out.println((i + 1) +") PID = " + virtualMachineDescriptor.id());
-            System.out.println(virtualMachineDescriptor.displayName());
-        }
-
-        System.out.println();
-        System.out.println("Enter choice number...");
-
-        String choice = null;
-        Scanner scanner = new Scanner(System.in);
-        choice = scanner.nextLine();
-        scanner.close();
-
-        System.out.println();
-        System.out.println("Selected option: " + choice);
-
-        int selectedOption = Integer.valueOf(choice);
-        if (selectedOption - 1 < virtualMachineDescriptors.size()) {
-            VirtualMachineDescriptor selectedVirtualMachineDescriptor = virtualMachineDescriptors.get(selectedOption - 1);
-            VirtualMachine virtualMachine = VirtualMachine.attach(selectedVirtualMachineDescriptor.id());
-            virtualMachine.loadAgent(JAR_PATH);
-            virtualMachine.detach();
+            ShellEcho.printJVMDescriptionMessage(i + 1, virtualMachineDescriptor);
         }
     }
 
+    /**
+     *
+     * @param virtualMachineDescriptors
+     */
+    private void runJVMSelectionLoop(List<VirtualMachineDescriptor> virtualMachineDescriptors) {
+
+        boolean isAgentApplied = false;
+        Scanner scanner = new Scanner(System.in);
+
+        while (!isAgentApplied) {
+
+            ShellEcho.printJVMSelectionRequest();
+            String choice = scanner.nextLine();
+
+            if (validateEnteredChoice(choice, virtualMachineDescriptors.size())) {
+
+                ShellEcho.printJVMSelectedChoice(choice);
+
+                int selectedOption = Integer.parseInt(choice) - 1;
+                isAgentApplied = runAgent(virtualMachineDescriptors.get(selectedOption));
+            }
+        }
+
+        scanner.close();
+    }
+
+    /**
+     *
+     * @param choice
+     * @return
+     */
+    private boolean validateEnteredChoice(String choice, int possibleRange) {
+
+        try {
+
+            int selectedOption = Integer.valueOf(choice);
+            if (selectedOption - 1 >= 0 && selectedOption < possibleRange) {
+                return true;
+            } else {
+                ShellEcho.printWrongChoiceSelectionMessage();
+                return false;
+            }
+
+        } catch (NumberFormatException exception) {
+            ShellEcho.printWrongNumberMessage(choice);
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     * @param virtualMachineDescriptor
+     */
+    private boolean runAgent( VirtualMachineDescriptor virtualMachineDescriptor) {
+
+        try {
+
+           VirtualMachine virtualMachine = VirtualMachine.attach(virtualMachineDescriptor.id());
+           virtualMachine.loadAgent(JAR_PATH);
+           virtualMachine.detach();
+
+           return true;
+
+       }  catch (AttachNotSupportedException attachException) {
+        ShellEcho.printJVMAttachIssueMessage(attachException);
+        } catch (AgentLoadException loadException) {
+            ShellEcho.printAgentIssueMessage(loadException);
+        } catch (AgentInitializationException initException) {
+            ShellEcho.printAgentIssueMessage(initException);
+        } catch (IOException exception) {
+            ShellEcho.printJVMAttachIssueMessage(exception);
+        }
+
+        return false;
+    }
 }
