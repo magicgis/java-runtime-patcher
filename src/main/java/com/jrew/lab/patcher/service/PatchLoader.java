@@ -1,6 +1,8 @@
 package com.jrew.lab.patcher.service;
 
 import com.jrew.lab.patcher.util.ClassFilesUtil;
+import com.jrew.lab.patcher.util.ConfigUtil;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +26,6 @@ public class PatchLoader {
 
     /** **/
     private static final String PATCH_FOLDER_NAME = "patch";
-
-    /** **/
-    private static final String PATCH_FOLDER_PATH = "d:/temp/000";
 
     /**
      *
@@ -64,13 +63,7 @@ public class PatchLoader {
      */
     private File[] loadClassFiles() {
 
-        File patchFolder = new File(PATCH_FOLDER_PATH);
-
-        if (patchFolder.isDirectory()) {
-
-            return patchFolder.listFiles();
-        }
-
-        throw new IllegalArgumentException("Provided path isn't directory");
+        File patchFolder = new File(ConfigUtil.getInstance().getPatchFolderPath());
+        return patchFolder.listFiles();
     }
 }

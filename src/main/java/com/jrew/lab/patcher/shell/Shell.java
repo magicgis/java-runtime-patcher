@@ -1,5 +1,6 @@
 package com.jrew.lab.patcher.shell;
 
+import com.jrew.lab.patcher.util.ConfigUtil;
 import com.sun.tools.attach.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +20,6 @@ public class Shell {
 
     /** **/
     private Logger logger = LoggerFactory.getLogger(Shell.class);
-
-    private static final String JAR_PATH = System.getenv("MAVEN_REPOSITORY") + "/com/jrew/lab/java-runtime-patcher/1.0-SNAPSHOT/" +
-            "java-runtime-patcher-1.0-SNAPSHOT.jar";
 
     /**
      *
@@ -124,7 +122,7 @@ public class Shell {
         try {
 
            VirtualMachine virtualMachine = VirtualMachine.attach(virtualMachineDescriptor.id());
-           virtualMachine.loadAgent(JAR_PATH);
+           virtualMachine.loadAgent(ConfigUtil.getInstance().getJarPath());
            virtualMachine.detach();
 
            return true;
