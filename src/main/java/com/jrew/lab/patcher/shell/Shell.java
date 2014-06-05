@@ -1,6 +1,8 @@
 package com.jrew.lab.patcher.shell;
 
 import com.sun.tools.attach.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,6 +16,9 @@ import java.util.Scanner;
  * To change this template use File | Settings | File Templates.
  */
 public class Shell {
+
+    /** **/
+    private Logger logger = LoggerFactory.getLogger(Shell.class);
 
     private static final String JAR_PATH = System.getenv("MAVEN_REPOSITORY") + "/com/jrew/lab/java-runtime-patcher/1.0-SNAPSHOT/" +
             "java-runtime-patcher-1.0-SNAPSHOT.jar";
@@ -33,9 +38,8 @@ public class Shell {
      */
     private void run() {
 
-        ShellEcho.printGreetingsMessage();
+        logger.info("Java runtime patcher utility {}", System.getProperty("line.separator"));
         processJVMSelection();
-
     }
 
     /**
@@ -43,10 +47,10 @@ public class Shell {
      */
     private void processJVMSelection() {
 
-        ShellEcho.printJVMSelectionMessage();
+        logger.info("Please select JVM process to patch: {}", System.getProperty("line.separator"));
 
         List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
-        printJVMs(virtualMachineDescriptors);
+        displayAvailableJavaProcesses(virtualMachineDescriptors);
 
         runJVMSelectionLoop(virtualMachineDescriptors);
     }
@@ -55,10 +59,10 @@ public class Shell {
      *
      * @param virtualMachineDescriptors
      */
-    private void printJVMs(List<VirtualMachineDescriptor> virtualMachineDescriptors) {
+    private void displayAvailableJavaProcesses(List<VirtualMachineDescriptor> virtualMachineDescriptors) {
         for (int i = 0; i < virtualMachineDescriptors.size(); i++) {
             VirtualMachineDescriptor virtualMachineDescriptor =  virtualMachineDescriptors.get(i);
-            ShellEcho.printJVMDescriptionMessage(i + 1, virtualMachineDescriptor);
+            logger.info("{}) {}{}", i + 1, virtualMachineDescriptor.displayName(), System.getProperty("line.separator"));
         }
     }
 
@@ -68,20 +72,19 @@ public class Shell {
      */
     private void runJVMSelectionLoop(List<VirtualMachineDescriptor> virtualMachineDescriptors) {
 
-        boolean isAgentApplied = false;
+        boolean isAgentProcessed = false;
         Scanner scanner = new Scanner(System.in);
 
-        while (!isAgentApplied) {
+        while (!isAgentProcessed) {
 
-            ShellEcho.printJVMSelectionRequest();
+            logger.info("Enter choice number...");
             String choice = scanner.nextLine();
 
             if (validateEnteredChoice(choice, virtualMachineDescriptors.size())) {
 
-                ShellEcho.printJVMSelectedChoice(choice);
-
+                logger.info("Selected option: {}{}", choice, System.getProperty("line.separator"));
                 int selectedOption = Integer.parseInt(choice) - 1;
-                isAgentApplied = runAgent(virtualMachineDescriptors.get(selectedOption));
+                isAgentProcessed = runAgent(virtualMachineDescriptors.get(selectedOption));
             }
         }
 
@@ -97,16 +100,16 @@ public class Shell {
 
         try {
 
-            int selectedOption = Integer.valueOf(choice);
-            if (selectedOption - 1 >= 0 && selectedOption < possibleRange) {
+            int selectedOption = Integer.valueOf(choice) - 1;
+            if (selectedOption >= 0 && selectedOption < possibleRange) {
                 return true;
             } else {
-                ShellEcho.printWrongChoiceSelectionMessage();
+                logger.info("Please enter valid choice number.{}", System.getProperty("line.separator"));
                 return false;
             }
 
         } catch (NumberFormatException exception) {
-            ShellEcho.printWrongNumberMessage(choice);
+            logger.info("{} isn't valid number. Please re-enter choice. {}", choice, System.getProperty("line.separator"));
         }
 
         return false;
@@ -126,14 +129,14 @@ public class Shell {
 
            return true;
 
-       }  catch (AttachNotSupportedException attachException) {
-        ShellEcho.printJVMAttachIssueMessage(attachException);
+        } catch (AttachNotSupportedException attachException) {
+            logger.info("Couldn't attach to selected java process: {}{}", attachException.getMessage(), System.getProperty("line.separator"));
         } catch (AgentLoadException loadException) {
-            ShellEcho.printAgentIssueMessage(loadException);
+            logger.info("Couldn't run java agent: {}{}", loadException.getMessage(), System.getProperty("line.separator"));
         } catch (AgentInitializationException initException) {
-            ShellEcho.printAgentIssueMessage(initException);
-        } catch (IOException exception) {
-            ShellEcho.printJVMAttachIssueMessage(exception);
+            logger.info("Couldn't run java agent: {}{}", initException.getMessage(), System.getProperty("line.separator"));
+        } catch (IOException ioException) {
+            logger.info("Couldn't attach to selected java process: {}{}", ioException.getMessage(), System.getProperty("line.separator"));
         }
 
         return false;
