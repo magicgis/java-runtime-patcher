@@ -61,7 +61,7 @@ public class Agent {
                 logger.info("{}Couldn't find class on runtime: {}{}", System.getProperty("line.separator"),
                         exception.getMessage() , System.getProperty("line.separator"));
             } catch (UnmodifiableClassException exception) {
-                logger.info("{}Could redefine class on runtime: {}{}", System.getProperty("line.separator"),
+                logger.info("{}Couldn't redefine class on runtime: {}{}", System.getProperty("line.separator"),
                         exception.getMessage() , System.getProperty("line.separator"));
             }
 
@@ -85,7 +85,7 @@ public class Agent {
                 ClassDefinition patchClassDefinition = new ClassDefinition(Class.forName(patchClassEntry.getKey()), patchClassEntry.getValue());
                 classDefinitions.add(patchClassDefinition);
             } catch (ClassNotFoundException e) {
-                logger.info("Could find on runtime following loaded class: {}", patchClassEntry.getKey());
+                logger.info("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
             }
         }
 

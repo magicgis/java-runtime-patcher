@@ -3,6 +3,13 @@ package com.jrew.lab.patcher.util;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,7 +31,19 @@ public class ConfigUtil {
         /** **/
         String PATH_FOLDER_KEY = "patch.folder.path";
 
+        /** **/
         String PATH_TO_JAR_KEY = "jar.path";
+
+    }
+
+    /**
+     *
+     */
+    interface PropertiesValues {
+
+        /** **/
+        String CURRENT_JAR_PATH_PLACEHOLDER = "jar.current.path";
+
     }
 
     /** **/
@@ -62,8 +81,8 @@ public class ConfigUtil {
      * @throws ConfigurationException
      */
     public String getPatchFolderPath() {
-
-        return configuration.getString(PropertiesKey.PATH_FOLDER_KEY);
+        Path path = Paths.get(configuration.getString(PropertiesKey.PATH_FOLDER_KEY));
+        return path.toAbsolutePath().toString();
     }
 
     /**
@@ -73,7 +92,25 @@ public class ConfigUtil {
      */
     public String getJarPath() {
 
-        return configuration.getString(PropertiesKey.PATH_TO_JAR_KEY);
+        String jarPath = configuration.getString(PropertiesKey.PATH_TO_JAR_KEY);
+        if (StringUtils.isEmpty(jarPath) || jarPath.equalsIgnoreCase(PropertiesValues.CURRENT_JAR_PATH_PLACEHOLDER)) {
+            return getJarCurrentPath();
+        }
+
+        return jarPath;
     }
 
+    /**
+     *
+     * @return
+     */
+    private String getJarCurrentPath() {
+        String path = ConfigUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        try {
+            File jarFile = new File(URLDecoder.decode(path, "UTF-8"));
+            return jarFile.getAbsolutePath();
+        } catch (UnsupportedEncodingException exception) {
+            throw new RuntimeException("Couldn't detect jar path: " + exception.getMessage());
+        }
+    }
 }

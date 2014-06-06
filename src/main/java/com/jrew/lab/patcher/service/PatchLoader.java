@@ -24,9 +24,6 @@ public class PatchLoader {
     /** **/
     private Logger logger = LoggerFactory.getLogger(PatchLoader.class);
 
-    /** **/
-    private static final String PATCH_FOLDER_NAME = "patch";
-
     /**
      *
      * @return
@@ -64,6 +61,11 @@ public class PatchLoader {
     private File[] loadClassFiles() {
 
         File patchFolder = new File(ConfigUtil.getInstance().getPatchFolderPath());
+
+        if (!patchFolder.exists()) {
+            throw new RuntimeException("Couldn't find patch folder: " + patchFolder);
+        }
+
         return patchFolder.listFiles();
     }
 }

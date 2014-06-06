@@ -36,7 +36,7 @@ public class Shell {
      */
     private void run() {
 
-        logger.info("Java runtime patcher utility {}", System.getProperty("line.separator"));
+        logger.info("{}Java runtime patcher utility{}", System.getProperty("line.separator"), System.getProperty("line.separator"));
         processJVMSelection();
     }
 
@@ -45,7 +45,7 @@ public class Shell {
      */
     private void processJVMSelection() {
 
-        logger.info("Please select JVM process to patch: {}", System.getProperty("line.separator"));
+        logger.info("Please select JVM process to patch:{}", System.getProperty("line.separator"));
 
         List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
         displayAvailableJavaProcesses(virtualMachineDescriptors);
