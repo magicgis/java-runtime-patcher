@@ -29,7 +29,10 @@ public class ConfigUtil {
     interface PropertiesKey {
 
         /** **/
-        String PATH_FOLDER_KEY = "patch.folder.path";
+        String PATH_FOLDER_ABSOLUTE_PATH_KEY = "patch.folder.absolute.path";
+
+        /** **/
+        String PATH_FOLDER_RELATIVE_PATH_KEY = "patch.folder.relative.to.jar.path";
 
         /** **/
         String PATH_TO_JAR_KEY = "jar.path";
@@ -81,8 +84,17 @@ public class ConfigUtil {
      * @throws ConfigurationException
      */
     public String getPatchFolderPath() {
-        Path path = Paths.get(configuration.getString(PropertiesKey.PATH_FOLDER_KEY));
-        return path.toAbsolutePath().toString();
+
+        String absolutePath = configuration.getString(PropertiesKey.PATH_FOLDER_ABSOLUTE_PATH_KEY);
+        if (StringUtils.isNotEmpty(absolutePath)) {
+            return absolutePath;
+        }
+
+        File jarFile = new File(getJarCurrentPath());
+        File jarFileFolder = jarFile.getParentFile();
+
+        String relativePath = configuration.getString(PropertiesKey.PATH_FOLDER_RELATIVE_PATH_KEY);
+        return jarFileFolder.getAbsolutePath() + relativePath;
     }
 
     /**
