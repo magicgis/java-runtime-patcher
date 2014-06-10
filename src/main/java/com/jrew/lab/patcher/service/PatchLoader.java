@@ -46,7 +46,7 @@ public class PatchLoader {
                 patchClasses.put(classFullName, fileData);
 
             } catch (IOException e) {
-                logger.info("{}Can't read file: {}{}", System.getProperty("line.separator"), classFile.getName(),
+                logger.error("{}Can't read file: {}{}", System.getProperty("line.separator"), classFile.getName(),
                         System.getProperty("line.separator"));
             }
         }

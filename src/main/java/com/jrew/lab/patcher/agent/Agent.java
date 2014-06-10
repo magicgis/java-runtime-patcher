@@ -42,7 +42,7 @@ public class Agent {
     private void applyPatch(Instrumentation instrumentation) {
 
         PatchLoader patchLoader = new PatchLoader();
-        Map<String,byte[]> patchClassesData = patchLoader.loadPatchClasses();
+        Map<String, byte[]> patchClassesData = patchLoader.loadPatchClasses();
         List<ClassDefinition> classDefinitions = prepareClassDefinitions(patchClassesData);
 
         if(classDefinitions.size() > 0) {
@@ -51,17 +51,16 @@ public class Agent {
             logger.info("{}Started redefining for following classes: {}", System.getProperty("line.separator"), System.getProperty("line.separator"));
 
             for (ClassDefinition classDefinition : classDefinitions) {
-                logger.info("{}", classDefinition.getClass().getName());
+                logger.info("{}", classDefinition.getDefinitionClass().getName());
             }
-
 
             try {
                 instrumentation.redefineClasses(classDefinitions.toArray(new ClassDefinition[classDefinitions.size()]));
             } catch (ClassNotFoundException exception) {
-                logger.info("{}Couldn't find class on runtime: {}{}", System.getProperty("line.separator"),
+                logger.error("{}Couldn't find class on runtime: {}{}", System.getProperty("line.separator"),
                         exception.getMessage() , System.getProperty("line.separator"));
             } catch (UnmodifiableClassException exception) {
-                logger.info("{}Couldn't redefine class on runtime: {}{}", System.getProperty("line.separator"),
+                logger.error("{}Couldn't redefine class on runtime: {}{}", System.getProperty("line.separator"),
                         exception.getMessage() , System.getProperty("line.separator"));
             }
 
@@ -82,10 +81,11 @@ public class Agent {
         for (Map.Entry<String, byte[]> patchClassEntry : patchClassesData.entrySet()) {
 
             try {
-                ClassDefinition patchClassDefinition = new ClassDefinition(Class.forName(patchClassEntry.getKey()), patchClassEntry.getValue());
+                ClassDefinition patchClassDefinition = new ClassDefinition(Class.forName(patchClassEntry.getKey(), true, ClassLoader.getSystemClassLoader()),
+                        patchClassEntry.getValue());
                 classDefinitions.add(patchClassDefinition);
             } catch (ClassNotFoundException e) {
-                logger.info("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
+                logger.error("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
             }
         }
 

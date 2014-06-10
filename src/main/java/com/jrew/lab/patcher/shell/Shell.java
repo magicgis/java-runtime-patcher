@@ -107,7 +107,7 @@ public class Shell {
             }
 
         } catch (NumberFormatException exception) {
-            logger.info("{} isn't valid number. Please re-enter choice. {}", choice, System.getProperty("line.separator"));
+            logger.error("{} isn't valid number. Please re-enter choice. {}", choice, System.getProperty("line.separator"));
         }
 
         return false;
@@ -121,20 +121,24 @@ public class Shell {
 
         try {
 
+           logger.info("Attaching to selected process...{}", System.getProperty("line.separator"));
+
            VirtualMachine virtualMachine = VirtualMachine.attach(virtualMachineDescriptor.id());
            virtualMachine.loadAgent(ConfigUtil.getInstance().getJarPath());
            virtualMachine.detach();
 
+           logger.info("Java runtime patching is finished.{}", System.getProperty("line.separator"));
+
            return true;
 
         } catch (AttachNotSupportedException attachException) {
-            logger.info("Couldn't attach to selected java process: {}{}", attachException.getMessage(), System.getProperty("line.separator"));
+            logger.error("Couldn't attach to selected java process: {}{}", attachException.getMessage(), System.getProperty("line.separator"));
         } catch (AgentLoadException loadException) {
-            logger.info("Couldn't run java agent: {}{}", loadException.getMessage(), System.getProperty("line.separator"));
+            logger.error("Couldn't run java agent: {}{}", loadException.getMessage(), System.getProperty("line.separator"));
         } catch (AgentInitializationException initException) {
-            logger.info("Couldn't run java agent: {}{}", initException.getMessage(), System.getProperty("line.separator"));
+            logger.error("Couldn't run java agent: {}{}", initException.getMessage(), System.getProperty("line.separator"));
         } catch (IOException ioException) {
-            logger.info("Couldn't attach to selected java process: {}{}", ioException.getMessage(), System.getProperty("line.separator"));
+            logger.error("Couldn't attach to selected java process: {}{}", ioException.getMessage(), System.getProperty("line.separator"));
         }
 
         return false;
