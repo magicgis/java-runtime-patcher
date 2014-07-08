@@ -38,7 +38,6 @@ public class PatchLoader {
 
             logger.info("Loading file: {}", classFile.getName());
             try {
-
                 byte[] fileData = FileUtils.readFileToByteArray(classFile);
                 String classFullName = ClassFilesUtil.readClassFileName(fileData);
 

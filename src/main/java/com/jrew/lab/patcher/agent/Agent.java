@@ -43,12 +43,10 @@ public class Agent {
 
         PatchLoader patchLoader = new PatchLoader();
         Map<String, byte[]> patchClassesData = patchLoader.loadPatchClasses();
-        List<ClassDefinition> classDefinitions = prepareClassDefinitions(patchClassesData);
+        List<ClassDefinition> classDefinitions = prepareClassDefinitions(patchClassesData, instrumentation.getAllLoadedClasses());
 
         if(classDefinitions.size() > 0) {
-            System.out.println();
-            System.out.println("");
-            logger.info("{}Started redefining for following classes: {}", System.getProperty("line.separator"), System.getProperty("line.separator"));
+            logger.info("Started redefining following classes: {}", System.getProperty("line.separator"));
 
             for (ClassDefinition classDefinition : classDefinitions) {
                 logger.info("{}", classDefinition.getDefinitionClass().getName());
@@ -75,20 +73,32 @@ public class Agent {
      * @param patchClassesData
      * @return
      */
-    private List<ClassDefinition> prepareClassDefinitions( Map<String,byte[]> patchClassesData) {
+    private List<ClassDefinition> prepareClassDefinitions( Map<String, byte[]> patchClassesData, Class[] allLoadedClasses) {
 
         List<ClassDefinition> classDefinitions = new ArrayList<ClassDefinition>();
         for (Map.Entry<String, byte[]> patchClassEntry : patchClassesData.entrySet()) {
 
-            try {
-                ClassDefinition patchClassDefinition = new ClassDefinition(Class.forName(patchClassEntry.getKey(), true, ClassLoader.getSystemClassLoader()),
+            Class<Object> clazz = loadedClass(patchClassEntry.getKey(), allLoadedClasses);
+            if (clazz != null) {
+                ClassDefinition patchClassDefinition = new ClassDefinition(clazz,
                         patchClassEntry.getValue());
                 classDefinitions.add(patchClassDefinition);
-            } catch (ClassNotFoundException e) {
+            } else {
                 logger.error("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
             }
         }
 
         return classDefinitions;
+    }
+
+    private <T> Class<T> loadedClass(String className, Class[] allLoadedClasses) {
+
+        for (Class loadedClass : allLoadedClasses) {
+            if (loadedClass.getName().equalsIgnoreCase(className)) {
+                return loadedClass;
+            }
+        }
+
+        return null;
     }
 }
