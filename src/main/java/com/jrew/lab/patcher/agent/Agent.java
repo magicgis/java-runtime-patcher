@@ -1,6 +1,7 @@
 package com.jrew.lab.patcher.agent;
 
-import com.jrew.lab.patcher.service.PatchLoader;
+import com.jrew.lab.patcher.service.PatchClassLoader;
+import com.jrew.lab.patcher.service.PatchReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,19 +42,19 @@ public class Agent {
      */
     private void applyPatch(Instrumentation instrumentation) {
 
-        PatchLoader patchLoader = new PatchLoader();
-        Map<String, byte[]> patchClassesData = patchLoader.loadPatchClasses();
-        List<ClassDefinition> classDefinitions = prepareClassDefinitions(patchClassesData, instrumentation.getAllLoadedClasses());
+        PatchReader patchReader = new PatchReader();
+        Map<String, byte[]> patchClassesData = patchReader.loadPatchClasses();
+        List<ClassDefinition> classDefinitionsToRedefine = processClassDefinitions(patchClassesData, instrumentation.getAllLoadedClasses());
 
-        if(classDefinitions.size() > 0) {
+        if(classDefinitionsToRedefine.size() > 0) {
             logger.info("Started redefining following classes: {}", System.getProperty("line.separator"));
 
-            for (ClassDefinition classDefinition : classDefinitions) {
+            for (ClassDefinition classDefinition : classDefinitionsToRedefine) {
                 logger.info("{}", classDefinition.getDefinitionClass().getName());
             }
 
             try {
-                instrumentation.redefineClasses(classDefinitions.toArray(new ClassDefinition[classDefinitions.size()]));
+                instrumentation.redefineClasses(classDefinitionsToRedefine.toArray(new ClassDefinition[classDefinitionsToRedefine.size()]));
             } catch (ClassNotFoundException exception) {
                 logger.error("{}Couldn't find class on runtime: {}{}", System.getProperty("line.separator"),
                         exception.getMessage() , System.getProperty("line.separator"));
@@ -73,18 +74,27 @@ public class Agent {
      * @param patchClassesData
      * @return
      */
-    private List<ClassDefinition> prepareClassDefinitions( Map<String, byte[]> patchClassesData, Class[] allLoadedClasses) {
+    private List<ClassDefinition> processClassDefinitions(Map<String, byte[]> patchClassesData, Class[] allLoadedClasses) {
 
         List<ClassDefinition> classDefinitions = new ArrayList<ClassDefinition>();
         for (Map.Entry<String, byte[]> patchClassEntry : patchClassesData.entrySet()) {
 
-            Class<Object> clazz = loadedClass(patchClassEntry.getKey(), allLoadedClasses);
+            String className = patchClassEntry.getKey();
+            Class<Object> clazz = loadedClass(className, allLoadedClasses);
             if (clazz != null) {
                 ClassDefinition patchClassDefinition = new ClassDefinition(clazz,
                         patchClassEntry.getValue());
                 classDefinitions.add(patchClassDefinition);
             } else {
-                logger.error("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
+                // Class metadata hasn't been loaded into JVM yet
+                // Use custom ClassLoader to load it
+                PatchClassLoader patchClassLoader = new PatchClassLoader();
+                try {
+                    patchClassLoader.loadClass(className);
+                    logger.error("Class {} metadata has been loaded. {}", className, System.getProperty("line.separator"));
+                } catch (ClassNotFoundException exp) {
+                    logger.error("Couldn't load class metadata: {}{}", exp.getMessage(), System.getProperty("line.separator"));
+                }
             }
         }
 

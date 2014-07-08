@@ -2,7 +2,6 @@ package com.jrew.lab.patcher.service;
 
 import com.jrew.lab.patcher.util.ClassFilesUtil;
 import com.jrew.lab.patcher.util.ConfigUtil;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +18,10 @@ import java.util.Map;
  * Time: 15:42
  * To change this template use File | Settings | File Templates.
  */
-public class PatchLoader {
+public class PatchReader {
 
     /** **/
-    private Logger logger = LoggerFactory.getLogger(PatchLoader.class);
+    private Logger logger = LoggerFactory.getLogger(PatchReader.class);
 
     /**
      *
