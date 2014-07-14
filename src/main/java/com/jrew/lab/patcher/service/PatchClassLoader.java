@@ -10,18 +10,16 @@ import java.util.Map;
  */
 public class PatchClassLoader extends ClassLoader {
 
-    public PatchClassLoader() {
-    }
+    /** **/
+    private Map<String, byte[]> patchClassesData;
 
-    public PatchClassLoader(ClassLoader parent) {
-        super(parent);
+    public PatchClassLoader(Map<String, byte[]> patchClassesData) {
+        this.patchClassesData = patchClassesData;
     }
 
     @Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 
-        PatchReader patchReader = new PatchReader();
-        Map<String, byte[]> patchClassesData = patchReader.loadPatchClasses();
         if (patchClassesData.containsKey(className)) {
             byte[] classBinaryData = patchClassesData.get(className);
             return defineClass(className, classBinaryData, 0, classBinaryData.length);

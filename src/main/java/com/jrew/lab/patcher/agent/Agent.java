@@ -25,6 +25,9 @@ public class Agent {
     /** **/
     private Logger logger = LoggerFactory.getLogger(Agent.class);
 
+    /** **/
+    private Map<String, byte[]> patchClassesData;
+
     public static void premain(String args, Instrumentation instrumentation) {
 
     }
@@ -43,8 +46,9 @@ public class Agent {
     private void applyPatch(Instrumentation instrumentation) {
 
         PatchReader patchReader = new PatchReader();
-        Map<String, byte[]> patchClassesData = patchReader.loadPatchClasses();
-        List<ClassDefinition> classDefinitionsToRedefine = processClassDefinitions(patchClassesData, instrumentation.getAllLoadedClasses());
+        patchClassesData = patchReader.loadPatchClasses();
+
+        List<ClassDefinition> classDefinitionsToRedefine = processClassDefinitions(instrumentation.getAllLoadedClasses());
 
         if(classDefinitionsToRedefine.size() > 0) {
             logger.info("Started redefining following classes: {}", System.getProperty("line.separator"));
@@ -71,10 +75,11 @@ public class Agent {
 
     /**
      *
-     * @param patchClassesData
      * @return
      */
-    private List<ClassDefinition> processClassDefinitions(Map<String, byte[]> patchClassesData, Class[] allLoadedClasses) {
+    private List<ClassDefinition> processClassDefinitions(Class[] allLoadedClasses) {
+
+        PatchClassLoader patchClassLoader = new PatchClassLoader(patchClassesData);
 
         List<ClassDefinition> classDefinitions = new ArrayList<ClassDefinition>();
         for (Map.Entry<String, byte[]> patchClassEntry : patchClassesData.entrySet()) {
@@ -88,7 +93,6 @@ public class Agent {
             } else {
                 // Class metadata hasn't been loaded into JVM yet
                 // Use custom ClassLoader to load it
-                PatchClassLoader patchClassLoader = new PatchClassLoader();
                 try {
                     patchClassLoader.loadClass(className);
                     logger.error("Class {} metadata has been loaded. {}", className, System.getProperty("line.separator"));
