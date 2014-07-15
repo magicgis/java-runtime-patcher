@@ -17,6 +17,11 @@ public class PatchClassLoader extends ClassLoader {
         this.patchClassesData = patchClassesData;
     }
 
+    public PatchClassLoader(ClassLoader parent, Map<String, byte[]> patchClassesData) {
+        super(parent);
+        this.patchClassesData = patchClassesData;
+    }
+
     @Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 

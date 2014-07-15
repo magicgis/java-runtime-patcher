@@ -12,6 +12,7 @@ import java.lang.instrument.UnmodifiableClassException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarFile;
 
 /**
  * Created with IntelliJ IDEA.
@@ -79,8 +80,6 @@ public class Agent {
      */
     private List<ClassDefinition> processClassDefinitions(Class[] allLoadedClasses) {
 
-        PatchClassLoader patchClassLoader = new PatchClassLoader(patchClassesData);
-
         List<ClassDefinition> classDefinitions = new ArrayList<ClassDefinition>();
         for (Map.Entry<String, byte[]> patchClassEntry : patchClassesData.entrySet()) {
 
@@ -91,14 +90,7 @@ public class Agent {
                         patchClassEntry.getValue());
                 classDefinitions.add(patchClassDefinition);
             } else {
-                // Class metadata hasn't been loaded into JVM yet
-                // Use custom ClassLoader to load it
-                try {
-                    patchClassLoader.loadClass(className);
-                    logger.error("Class {} metadata has been loaded. {}", className, System.getProperty("line.separator"));
-                } catch (ClassNotFoundException exp) {
-                    logger.error("Couldn't load class metadata: {}{}", exp.getMessage(), System.getProperty("line.separator"));
-                }
+                logger.error("Couldn't find on runtime loaded class: {}", patchClassEntry.getKey());
             }
         }
 
